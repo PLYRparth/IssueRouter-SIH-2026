@@ -236,11 +236,8 @@ export default function CitizenDashboard() {
           formData.append('files', p.file)
         })
 
-        const uploadRes = await fetch('/api/challenges/upload-photos', {
+        const uploadRes = await authFetch('/api/challenges/upload-photos', {
           method: 'POST',
-          headers: {
-            ...getAuthHeaders()
-          },
           body: formData
         })
 
@@ -265,11 +262,10 @@ export default function CitizenDashboard() {
         media_urls: uploadedUrls
       }
 
-      const res = await fetch('/api/challenges/', {
+      const res = await authFetch('/api/challenges/', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders()
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(challengePayload)
       })

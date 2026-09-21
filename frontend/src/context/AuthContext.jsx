@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { authFetch } from '../api/client'
 
 const AuthContext = createContext()
 
@@ -28,9 +29,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (token) {
       // Sync authenticated user profile from backend
-      fetch('/api/auth/me', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      authFetch('/api/auth/me')
       .then(res => {
         if (res.status === 401) {
           // Token is expired or invalid
@@ -59,7 +58,7 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await authFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
