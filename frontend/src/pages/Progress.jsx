@@ -646,8 +646,9 @@ export default function Progress() {
                                                                             alt={`Evidence ${idx + 1}`}
                                                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                                                                             onError={(e) => {
-                                                                                if (!e.currentTarget.src.startsWith('http://localhost:8000')) {
-                                                                                    e.currentTarget.src = `http://localhost:8000${url.startsWith('/') ? url : '/' + url}`
+                                                                                const fallback = getMediaUrl(url)
+                                                                                if (e.currentTarget.src !== fallback) {
+                                                                                    e.currentTarget.src = fallback
                                                                                 }
                                                                             }}
                                                                         />

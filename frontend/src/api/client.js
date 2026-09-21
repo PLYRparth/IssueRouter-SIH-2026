@@ -1,11 +1,14 @@
 /**
  * api/client.js — Axios base client for IssueRouter backend.
- * All API calls go through /api which Vite proxies to http://localhost:8000.
+ * Uses VITE_API_URL if configured, otherwise falls back to /api.
  */
 import axios from 'axios'
 
+const rawApiUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
+const API_BASE = rawApiUrl ? `${rawApiUrl}/api` : '/api'
+
 const client = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE,
   timeout: 15_000,
   headers: { 'Content-Type': 'application/json' },
 })
@@ -47,17 +50,18 @@ export async function authFetch(inputUrl, options = {}) {
     ...(options.headers || {}),
   }
 
+  let resolvedUrl = inputUrl
+  if (rawApiUrl && inputUrl.startsWith('/api')) {
+    resolvedUrl = `${rawApiUrl}${inputUrl}`
+  }
+
   try {
-    const res = await fetch(inputUrl, { ...options, headers })
+    const res = await fetch(resolvedUrl, { ...options, headers })
     return res
   } catch (err) {
-    if (inputUrl.startsWith('http://localhost:8000/api/')) {
-      const relativeUrl = inputUrl.replace('http://localhost:8000', '')
-      return fetch(relativeUrl, { ...options, headers })
-    }
-    if (inputUrl.startsWith('/api/')) {
-      const directUrl = `http://localhost:8000${inputUrl}`
-      return fetch(directUrl, { ...options, headers })
+    if (!rawApiUrl && resolvedUrl.startsWith('/api/')) {
+      const fallbackUrl = `http://localhost:8000${resolvedUrl}`
+      return fetch(fallbackUrl, { ...options, headers })
     }
     throw err
   }
@@ -66,7 +70,11 @@ export async function authFetch(inputUrl, options = {}) {
 export function getMediaUrl(url) {
   if (!url) return ''
   if (url.startsWith('http://') || url.startsWith('https://')) return url
-  return url.startsWith('/') ? url : `/${url}`
+  const cleanPath = url.startsWith('/') ? url : `/${url}`
+  if (rawApiUrl) {
+    return `${rawApiUrl}${cleanPath}`
+  }
+  return cleanPath
 }
 
 export default client

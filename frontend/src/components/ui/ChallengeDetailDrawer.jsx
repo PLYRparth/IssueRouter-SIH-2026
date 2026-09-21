@@ -209,8 +209,9 @@ export default function ChallengeDetailDrawer({ challenge, isOpen, onClose, onRo
                                                         alt={`Evidence preview ${idx + 1}`} 
                                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                         onError={(e) => {
-                                                            if (!e.currentTarget.src.startsWith('http://localhost:8000')) {
-                                                                e.currentTarget.src = `http://localhost:8000${url.startsWith('/') ? url : '/' + url}`
+                                                            const fallback = getMediaUrl(url)
+                                                            if (e.currentTarget.src !== fallback) {
+                                                                e.currentTarget.src = fallback
                                                             }
                                                         }}
                                                     />
@@ -421,8 +422,9 @@ export default function ChallengeDetailDrawer({ challenge, isOpen, onClose, onRo
                                                         alt={`Citizen evidence ${idx + 1}`} 
                                                         className="w-full h-full object-cover" 
                                                         onError={(e) => {
-                                                            if (!e.currentTarget.src.startsWith('http://localhost:8000')) {
-                                                                e.currentTarget.src = `http://localhost:8000${url.startsWith('/') ? url : '/' + url}`
+                                                            const fallback = getMediaUrl(url)
+                                                            if (e.currentTarget.src !== fallback) {
+                                                                e.currentTarget.src = fallback
                                                             }
                                                         }}
                                                     />
@@ -475,8 +477,9 @@ export default function ChallengeDetailDrawer({ challenge, isOpen, onClose, onRo
                                                     alt={selectedImage.title} 
                                                     className="w-16 h-12 object-cover rounded-lg border border-blue-200" 
                                                     onError={(e) => {
-                                                        if (!e.currentTarget.src.startsWith('http://localhost:8000')) {
-                                                            e.currentTarget.src = `http://localhost:8000${selectedImage.url.startsWith('/') ? selectedImage.url : '/' + selectedImage.url}`
+                                                        const fallback = getMediaUrl(selectedImage.url)
+                                                        if (e.currentTarget.src !== fallback) {
+                                                            e.currentTarget.src = fallback
                                                         }
                                                     }}
                                                 />
@@ -676,8 +679,9 @@ export default function ChallengeDetailDrawer({ challenge, isOpen, onClose, onRo
                                     alt={selectedImage.title}
                                     className="max-h-[70vh] w-auto max-w-full object-contain rounded-lg shadow-md"
                                     onError={(e) => {
-                                        if (!e.currentTarget.src.startsWith('http://localhost:8000')) {
-                                            e.currentTarget.src = `http://localhost:8000${selectedImage.url.startsWith('/') ? selectedImage.url : '/' + selectedImage.url}`
+                                        const fallback = getMediaUrl(selectedImage.url)
+                                        if (e.currentTarget.src !== fallback) {
+                                            e.currentTarget.src = fallback
                                         }
                                     }}
                                 />
@@ -693,7 +697,7 @@ export default function ChallengeDetailDrawer({ challenge, isOpen, onClose, onRo
                             <span>Geotag verified civic evidence</span>
                             {selectedImage.type === 'real' && (
                                 <a 
-                                    href={selectedImage.url.startsWith('http') ? selectedImage.url : `http://localhost:8000${selectedImage.url.startsWith('/') ? selectedImage.url : '/' + selectedImage.url}`} 
+                                    href={getMediaUrl(selectedImage.url)} 
                                     target="_blank" 
                                     rel="noreferrer"
                                     className="text-blue-400 hover:underline flex items-center gap-1"

@@ -1,6 +1,7 @@
 """
 main.py — IssueRouter FastAPI application (SIH 2026).
 """
+import os
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,13 +32,26 @@ app = FastAPI(
     version="2.1.0",
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+# ── CORS configuration ───────────────────────────────────────────────────
+env_origins = os.getenv("ALLOWED_ORIGINS", "")
+allowed_origins = [o.strip() for o in env_origins.split(",") if o.strip()]
+if not allowed_origins:
+    allowed_origins = [
         "http://localhost:5173",   # Vite dev server
         "http://127.0.0.1:5173",
         "http://localhost:3000",
-    ],
+    ]
+
+# Default regex allows any Vercel/Netlify preview/production URL and local development
+cors_regex = os.getenv(
+    "CORS_ORIGIN_REGEX", 
+    r"^https://.*\.vercel\.app$|^https://.*\.netlify\.app$|^https://.*\.onrender\.com$|^http://localhost:\d+$|^http://127\.0\.0\.1:\d+$"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_origin_regex=cors_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,26 +76,27 @@ def startup_event():
     Base.metadata.create_all(bind=engine)
     try:
         with engine.connect() as conn:
-            # 1. Projects org_id migration
-            proj_cols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(projects)").fetchall()]
-            if "org_id" not in proj_cols:
-                conn.exec_driver_sql("ALTER TABLE projects ADD COLUMN org_id VARCHAR REFERENCES organizations(id)")
-                conn.commit()
-                print("[IssueRouter-SIH] Migrated projects table: added org_id column.")
+            if engine.dialect.name == "sqlite":
+                # 1. Projects org_id migration
+                proj_cols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(projects)").fetchall()]
+                if "org_id" not in proj_cols:
+                    conn.exec_driver_sql("ALTER TABLE projects ADD COLUMN org_id VARCHAR REFERENCES organizations(id)")
+                    conn.commit()
+                    print("[IssueRouter-SIH] Migrated projects table: added org_id column.")
 
-            # 2. Challenges media_urls migration
-            ch_cols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(challenges)").fetchall()]
-            if "media_urls" not in ch_cols:
-                conn.exec_driver_sql("ALTER TABLE challenges ADD COLUMN media_urls JSON")
-                conn.commit()
-                print("[IssueRouter-SIH] Migrated challenges table: added media_urls column.")
+                # 2. Challenges media_urls migration
+                ch_cols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(challenges)").fetchall()]
+                if "media_urls" not in ch_cols:
+                    conn.exec_driver_sql("ALTER TABLE challenges ADD COLUMN media_urls JSON")
+                    conn.commit()
+                    print("[IssueRouter-SIH] Migrated challenges table: added media_urls column.")
 
-            # 3. ChallengeEvidence media_urls migration
-            ev_cols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(challenge_evidence)").fetchall()]
-            if "media_urls" not in ev_cols:
-                conn.exec_driver_sql("ALTER TABLE challenge_evidence ADD COLUMN media_urls JSON")
-                conn.commit()
-                print("[IssueRouter-SIH] Migrated challenge_evidence table: added media_urls column.")
+                # 3. ChallengeEvidence media_urls migration
+                ev_cols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(challenge_evidence)").fetchall()]
+                if "media_urls" not in ev_cols:
+                    conn.exec_driver_sql("ALTER TABLE challenge_evidence ADD COLUMN media_urls JSON")
+                    conn.commit()
+                    print("[IssueRouter-SIH] Migrated challenge_evidence table: added media_urls column.")
     except Exception as e:
         print("[IssueRouter-SIH] Startup column check notice:", e)
     print("[IssueRouter-SIH] DB ready.")

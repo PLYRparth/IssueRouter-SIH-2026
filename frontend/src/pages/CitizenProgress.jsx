@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { getMediaUrl } from '../api/client'
+import { getMediaUrl, authFetch } from '../api/client'
 import {
   TrendingUp,
   MapPin,
@@ -123,15 +122,7 @@ export default function CitizenProgress() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/challenges/my', {
-        headers: {
-          ...getAuthHeaders()
-        }
-      }).catch(() =>
-        fetch('http://localhost:8000/api/challenges/my', {
-          headers: { ...getAuthHeaders() }
-        })
-      )
+      const res = await authFetch('/api/challenges/my')
 
       if (res && res.ok) {
         const data = await res.json()
@@ -491,8 +482,9 @@ export default function CitizenProgress() {
                         alt={`Evidence ${i + 1}`} 
                         className="w-full h-full object-cover" 
                         onError={(e) => {
-                          if (!e.currentTarget.src.startsWith('http://localhost:8000')) {
-                            e.currentTarget.src = `http://localhost:8000${url.startsWith('/') ? url : '/' + url}`
+                          const fallback = getMediaUrl(url)
+                          if (e.currentTarget.src !== fallback) {
+                            e.currentTarget.src = fallback
                           }
                         }}
                       />
@@ -602,8 +594,9 @@ export default function CitizenProgress() {
               alt="Zoomed evidence" 
               className="max-h-[80vh] w-auto object-contain" 
               onError={(e) => {
-                if (!e.currentTarget.src.startsWith('http://localhost:8000')) {
-                  e.currentTarget.src = `http://localhost:8000${lightboxPhoto.startsWith('/') ? lightboxPhoto : '/' + lightboxPhoto}`
+                const fallback = getMediaUrl(lightboxPhoto)
+                if (e.currentTarget.src !== fallback) {
+                  e.currentTarget.src = fallback
                 }
               }}
             />

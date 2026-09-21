@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { MapPin, Layers, List, TrendingUp, Building2, AlertCircle, AlertTriangle } from 'lucide-react'
+import { authFetch } from '../api/client'
 
 const PRIORITY_COLORS = { 1: '#ef4444', 2: '#f97316', 3: '#6366f1', 4: '#9ca3af' }
 
@@ -294,9 +295,7 @@ export default function Maps() {
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch('/api/challenges/').catch(() =>
-          fetch('http://localhost:8000/api/challenges/')
-        )
+        const res = await authFetch('/api/challenges/')
         if (res && res.ok) {
           const data = await res.json()
           if (isMounted) {
